@@ -107,6 +107,33 @@ Examples:
 
 	// Add subcommands to 'get'
 	cmd.AddCommand(getServicesCmd()) // This adds the services command
+	cmd.AddCommand(getTasksCmd())    // This adds the services command
+
+	return cmd
+}
+
+func deleteCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delete",
+		Short: "Delete resources",
+		Long: `Delete resources from the ECS cluster.
+        
+Valid resource types are:
+  * task TASK_ID    Delete (stop) a specific task
+  * service NAME    Delete a service (not implemented yet)
+        
+Examples:
+  # Delete a specific task
+  ecs delete task 1234567890-abcd-efgh-ijkl
+  
+  # Delete a service (not implemented yet)
+  ecs delete service my-service`,
+	}
+
+	// Add delete subcommands
+	cmd.AddCommand(deleteTaskCmd())
+	// Future commands can be added here, like:
+	// cmd.AddCommand(deleteServiceCmd())
 
 	return cmd
 }

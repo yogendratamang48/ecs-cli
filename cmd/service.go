@@ -18,7 +18,7 @@ func getServicesCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "services",
-		Aliases: []string{"svc"},
+		Aliases: []string{"svc", "svc", "service"},
 		Short:   "List services",
 		Long:    `Display all services in the current ECS cluster context.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
