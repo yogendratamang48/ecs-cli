@@ -40,6 +40,7 @@ func init() {
 	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	cobra.OnInitialize(initConfig)
 	rootCmd.AddCommand(configCmd())
+	rootCmd.AddCommand(getCmd())
 }
 
 func initConfig() {
@@ -80,4 +81,32 @@ func initConfig() {
 		panic(err)
 	}
 
+}
+
+// getCmd represents the get command group
+func getCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get",
+		Short: "Display one or many resources",
+		Long: `Display one or many resources from an ECS cluster.
+        
+Valid resource types are:
+  * services (alias: svc)
+  * tasks
+        
+Examples:
+  # List all services in the current context
+  ecs get services
+  
+  # List all services using the short alias
+  ecs get svc
+  
+  # List all tasks in the current context
+  ecs get tasks`,
+	}
+
+	// Add subcommands to 'get'
+	cmd.AddCommand(getServicesCmd()) // This adds the services command
+
+	return cmd
 }
