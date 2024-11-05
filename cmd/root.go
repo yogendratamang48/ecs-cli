@@ -41,6 +41,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.AddCommand(configCmd())
 	rootCmd.AddCommand(getCmd())
+	rootCmd.AddCommand(describeCmd())
 }
 
 func initConfig() {
@@ -107,7 +108,7 @@ Examples:
 
 	// Add subcommands to 'get'
 	cmd.AddCommand(getServicesCmd()) // This adds the services command
-	cmd.AddCommand(getTasksCmd())    // This adds the services command
+	cmd.AddCommand(getTasksCmd())    // This adds the tasks command
 
 	return cmd
 }

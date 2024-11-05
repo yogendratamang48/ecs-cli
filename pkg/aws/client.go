@@ -177,3 +177,65 @@ func extractTaskId(arn string) string {
 	parts := strings.Split(arn, "/")
 	return parts[len(parts)-1]
 }
+
+func (c *ECSClient) DescribeServices(ctx context.Context, serviceNames []string) ([]*types.ServiceDetail, error) {
+	input := &ecs.DescribeServicesInput{
+		Cluster:  &c.Context.Cluster,
+		Services: serviceNames,
+	}
+
+	result, err := c.Client.DescribeServices(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	var services []*types.ServiceDetail
+	for _, svc := range result.Services {
+		// Create load balancer info
+		var loadBalancers []types.LoadBalancer
+		for _, lb := range svc.LoadBalancers {
+			loadBalancers = append(loadBalancers, types.LoadBalancer{
+				Type:          string(*lb.TargetGroupArn),
+				TargetGroup:   *lb.TargetGroupArn,
+				ContainerName: *lb.ContainerName,
+				ContainerPort: int(*lb.ContainerPort),
+			})
+		}
+
+		// Create network config
+		networkConfig := types.NetworkConfig{
+			Type: string(svc.NetworkConfiguration.AwsvpcConfiguration.AssignPublicIp),
+		}
+		if svc.NetworkConfiguration != nil && svc.NetworkConfiguration.AwsvpcConfiguration != nil {
+			networkConfig.SubnetIds = svc.NetworkConfiguration.AwsvpcConfiguration.Subnets
+			networkConfig.SecurityGroups = svc.NetworkConfiguration.AwsvpcConfiguration.SecurityGroups
+			networkConfig.PublicIP = string(svc.NetworkConfiguration.AwsvpcConfiguration.AssignPublicIp)
+		}
+
+		// Create events
+		var events []types.ServiceEvent
+		for _, event := range svc.Events {
+			events = append(events, types.ServiceEvent{
+				CreatedAt: *event.CreatedAt,
+				Message:   *event.Message,
+			})
+		}
+
+		serviceDetail := &types.ServiceDetail{
+			Name:          *svc.ServiceName,
+			Status:        string(*svc.Status),
+			TaskDef:       *svc.TaskDefinition,
+			DesiredCount:  int(svc.DesiredCount),
+			RunningCount:  int(svc.RunningCount),
+			PendingCount:  int(svc.PendingCount),
+			CreatedAt:     *svc.CreatedAt,
+			LoadBalancers: loadBalancers,
+			NetworkConfig: networkConfig,
+			Events:        events,
+		}
+
+		services = append(services, serviceDetail)
+	}
+
+	return services, nil
+}
