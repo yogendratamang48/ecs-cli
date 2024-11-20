@@ -32,7 +32,7 @@ Examples:
 	}
 
 	cmd.AddCommand(describeServicesCmd())
-	// Future: cmd.AddCommand(describeTasksCmd())
+	cmd.AddCommand(describeTasksCmd())
 
 	return cmd
 }
@@ -41,8 +41,9 @@ func describeServicesCmd() *cobra.Command {
 	var outputFormat string
 
 	cmd := &cobra.Command{
-		Use:   "services [SERVICE_NAME]",
-		Short: "Show details of services",
+		Use:     "services [SERVICE_NAME]",
+		Aliases: []string{"svc", "svc", "service"},
+		Short:   "Show details of services",
 		Long: `Show detailed information about one or all services in the cluster.
 
 Examples:
@@ -144,6 +145,143 @@ Examples:
 							fmt.Printf("  %s: %s\n",
 								event.CreatedAt.Format(time.RFC3339),
 								event.Message)
+						}
+					}
+
+					fmt.Println()
+				}
+			}
+
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVarP(&outputFormat, "output", "o", "", "Output format (json|yaml)")
+
+	return cmd
+}
+func describeTasksCmd() *cobra.Command {
+	var outputFormat string
+
+	cmd := &cobra.Command{
+		Use:     "tasks [TASK_ID]",
+		Aliases: []string{"task"},
+		Short:   "Show details of tasks",
+		Long: `Show detailed information about one or all tasks in the cluster.
+
+Examples:
+  # Describe all tasks
+  ecs describe tasks
+
+  # Describe a specific task
+  ecs describe tasks 1234567890-abcd-efgh-ijkl
+
+  # Output in JSON format
+  ecs describe tasks 1234567890-abcd-efgh-ijkl -o json`,
+
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Get current context
+			ctx, err := configManager.GetContext()
+			if err != nil {
+				return fmt.Errorf("failed to get current context: %w", err)
+			}
+
+			// Create ECS client
+			client, err := aws.NewECSClient(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to create ECS client: %w", err)
+			}
+
+			var taskIds []string
+			if len(args) > 0 {
+				taskIds = []string{args[0]}
+			} else {
+				// If no task ID provided, get all tasks
+				tasks, err := client.ListTasks(context.Background())
+				if err != nil {
+					return fmt.Errorf("failed to list tasks: %w", err)
+				}
+				for _, task := range tasks {
+					taskIds = append(taskIds, task.TaskARN)
+				}
+			}
+
+			// Get detailed task information
+			tasks, err := client.DescribeTasks(context.Background(), taskIds)
+			if err != nil {
+				return fmt.Errorf("failed to describe tasks: %w", err)
+			}
+
+			// Handle different output formats
+			switch outputFormat {
+			case "json":
+				data, err := json.MarshalIndent(tasks, "", "  ")
+				if err != nil {
+					return fmt.Errorf("failed to marshal to JSON: %w", err)
+				}
+				fmt.Println(string(data))
+
+			case "yaml":
+				data, err := yaml.Marshal(tasks)
+				if err != nil {
+					return fmt.Errorf("failed to marshal to YAML: %w", err)
+				}
+				fmt.Println(string(data))
+
+			default:
+				// Default formatted output
+				for _, task := range tasks {
+					fmt.Printf("Task ID:          %s\n", task.TaskID)
+					fmt.Printf("Status:           %s\n", task.Status)
+					fmt.Printf("Desired Status:   %s\n", task.DesiredStatus)
+					fmt.Printf("Task Definition:  %s\n", task.TaskDefinitionARN)
+					fmt.Printf("Launch Type:      %s\n", task.LaunchType)
+					if task.CPU != "" {
+						fmt.Printf("CPU:             %s\n", task.CPU)
+					}
+					if task.Memory != "" {
+						fmt.Printf("Memory:          %s\n", task.Memory)
+					}
+					fmt.Printf("Created At:       %s\n", task.CreatedAt.Format(time.RFC3339))
+					if !task.StartedAt.IsZero() {
+						fmt.Printf("Started At:       %s\n", task.StartedAt.Format(time.RFC3339))
+					}
+					if !task.StoppedAt.IsZero() {
+						fmt.Printf("Stopped At:       %s\n", task.StoppedAt.Format(time.RFC3339))
+						fmt.Printf("Stopped Reason:   %s\n", task.StoppedReason)
+					}
+
+					fmt.Println("\nContainers:")
+					for _, container := range task.Containers {
+						fmt.Printf("  - Name:         %s\n", container.Name)
+						fmt.Printf("    Image:        %s\n", container.Image)
+						fmt.Printf("    Status:       %s\n", container.Status)
+						if container.RuntimeID != "" {
+							fmt.Printf("    Runtime ID:   %s\n", container.RuntimeID)
+						}
+						if container.ExitCode != nil {
+							fmt.Printf("    Exit Code:    %d\n", *container.ExitCode)
+						}
+						if len(container.NetworkBindings) > 0 {
+							fmt.Println("    Port Mappings:")
+							for _, binding := range container.NetworkBindings {
+								fmt.Printf("      %d:%d/%s\n",
+									binding.HostPort,
+									binding.ContainerPort,
+									binding.Protocol)
+							}
+						}
+					}
+
+					if len(task.NetworkInterfaces) > 0 {
+						fmt.Println("\nNetwork Interfaces:")
+						for _, ni := range task.NetworkInterfaces {
+							fmt.Printf("  - Attachment ID: %s\n", ni.AttachmentID)
+							fmt.Printf("    Private IPv4:  %s\n", ni.PrivateIPv4)
+							if ni.PublicIPv4 != "" {
+								fmt.Printf("    Public IPv4:   %s\n", ni.PublicIPv4)
+							}
+							fmt.Printf("    Subnet ID:     %s\n", ni.SubnetID)
 						}
 					}
 
