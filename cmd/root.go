@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -8,11 +9,29 @@ import (
 	"github.com/spf13/viper"
 )
 
+// These variables will be set by GoReleaser
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print version information of ecs cli",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("Version: %s\n", version)
+		fmt.Printf("Commit: %s\n", commit)
+		fmt.Printf("Built at: %s\n", date)
+	},
+}
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "ecs",
-	Short: "A CLI to interact with AWS ECS Cluster and Services",
-	Long:  `A CLI tool similar to kubectl for managing AWS ECS clusters, services, and tasks.`,
+	Use:     "ecs",
+	Short:   "A CLI to interact with AWS ECS Cluster and Services",
+	Long:    `A CLI tool similar to kubectl for managing AWS ECS clusters, services, and tasks.`,
+	Version: version,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
@@ -39,6 +58,7 @@ func init() {
 	// when this action is called directly.
 	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	cobra.OnInitialize(initConfig)
+	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(configCmd())
 	rootCmd.AddCommand(getCmd())
 	rootCmd.AddCommand(describeCmd())
