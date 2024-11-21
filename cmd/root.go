@@ -62,6 +62,7 @@ func init() {
 	rootCmd.AddCommand(configCmd())
 	rootCmd.AddCommand(getCmd())
 	rootCmd.AddCommand(describeCmd())
+	rootCmd.AddCommand(deleteCmd())
 }
 
 func initConfig() {
@@ -141,14 +142,10 @@ func deleteCmd() *cobra.Command {
         
 Valid resource types are:
   * task TASK_ID    Delete (stop) a specific task
-  * service NAME    Delete a service (not implemented yet)
         
 Examples:
   # Delete a specific task
-  ecs delete task 1234567890-abcd-efgh-ijkl
-  
-  # Delete a service (not implemented yet)
-  ecs delete service my-service`,
+  ecs delete task 1234567890-abcd-efgh-ijkl`,
 	}
 
 	// Add delete subcommands
