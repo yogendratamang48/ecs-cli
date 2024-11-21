@@ -1,4 +1,5 @@
 # ecs-cli
+**Note: This cli is still under development**
 Simple kubectl like CLI tool for AWS Elastic Container Service.
 
 ## Supported commands
