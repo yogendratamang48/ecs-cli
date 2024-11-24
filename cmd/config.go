@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/yogendratamang48/ecs/pkg/config"
 	"github.com/yogendratamang48/ecs/pkg/types"
 )
@@ -17,6 +19,44 @@ var configManager *config.Manager
 
 func init() {
 	configManager = config.NewManager()
+}
+func initConfig() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	configDir := filepath.Join(home, ".ecs")
+
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		panic(err)
+	}
+	configFile := filepath.Join(configDir, "config.yaml")
+	viper.SetConfigFile(configFile)
+	viper.SetConfigType("yaml")
+
+	// If the config file doesn't exist, create it with default settings
+	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+		// Create empty config file
+		file, err := os.Create(configFile)
+		if err != nil {
+			panic(err)
+		}
+		file.Close()
+
+		// Initialize with empty contexts
+		viper.Set("contexts", map[string]interface{}{})
+		viper.Set("current-context", "")
+
+		// Write initial config
+		if err := viper.WriteConfig(); err != nil {
+			panic(err)
+		}
+	}
+
+	// Read the config file
+	if err := viper.ReadInConfig(); err != nil {
+		panic(err)
+	}
 }
 
 func configCmd() *cobra.Command {
