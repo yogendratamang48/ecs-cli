@@ -44,7 +44,7 @@ func (c *ECSClient) ListServices(ctx context.Context) ([]*types.Service, error) 
 		input := &ecs.ListServicesInput{
 			Cluster:    &c.Context.Cluster,
 			NextToken:  nextToken,
-			MaxResults: aws.Int32(100),
+			MaxResults: aws.Int32(10),
 		}
 
 		result, err := c.Client.ListServices(ctx, input)
