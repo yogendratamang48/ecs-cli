@@ -20,4 +20,8 @@ ecs get tasks
 ecs describe service <service-name>
 
 ecs describe task <task-id>
+
+# scale service
+
+ecs scale service-name --replicas=N
 ```

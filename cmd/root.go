@@ -52,4 +52,5 @@ func init() {
 	rootCmd.AddCommand(getCmd())
 	rootCmd.AddCommand(describeCmd())
 	rootCmd.AddCommand(deleteCmd())
+	rootCmd.AddCommand(scaleCmd())
 }
