@@ -20,7 +20,6 @@ ecs get tasks
 ecs describe service <service-name>
 ecs describe task <task-id>
 
-
 # Show logs
 ecs logs <task-id>
 ecs logs <task-id> --follow
