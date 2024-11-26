@@ -18,10 +18,13 @@ ecs get tasks
 
 # Describe Service and Tasks
 ecs describe service <service-name>
-
 ecs describe task <task-id>
 
-# scale service
 
+# Show logs
+ecs logs <task-id>
+ecs logs <task-id> --follow
+
+# scale service
 ecs scale service-name --replicas=N
 ```
