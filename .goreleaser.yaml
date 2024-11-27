@@ -15,6 +15,7 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0
+      - PACKAGE_PATH=github.com/yogendratamang48/ecs/cmd
     goos:
       - linux
       - windows
@@ -23,7 +24,7 @@ builds:
       - amd64
       - arm64
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+      - -s -w -X {{.Env.PACKAGE_PATH}}.version={{.Version}} -X {{.Env.PACKAGE_PATH}}.commit={{.Commit}} -X {{.Env.PACKAGE_PATH}}.date={{.Date}}
 
 archives:
   - format: tar.gz
