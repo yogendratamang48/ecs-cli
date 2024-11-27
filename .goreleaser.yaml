@@ -13,7 +13,8 @@ before:
     - go mod tidy
 
 builds:
-  - env:
+  - binary: ecs
+    env:
       - CGO_ENABLED=0
       - PACKAGE_PATH=github.com/yogendratamang48/ecs/cmd
       - PROJECT_NAME=ecs
@@ -31,7 +32,7 @@ archives:
   - format: tar.gz
     # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
-      {{ .Env.PROJECT_NAME }}_
+      {{ .ProjectName }}_
       {{- title .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
