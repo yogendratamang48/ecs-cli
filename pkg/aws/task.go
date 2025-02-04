@@ -48,16 +48,24 @@ func (c *ECSClient) ListTasks(ctx context.Context) ([]*types.Task, error) {
 
 			taskDefParts := strings.Split(*task.TaskDefinitionArn, "/")
 			taskDefFamily := taskDefParts[len(taskDefParts)-1]
-
 			t := &types.Task{
-				TaskID:        taskId,
-				TaskARN:       *task.TaskArn,
+				TaskId:        taskId,
+				TaskArn:       *task.TaskArn,
 				Status:        string(*task.LastStatus),
 				TaskDefFamily: taskDefFamily,
 				LastStatus:    string(*task.LastStatus),
 				DesiredStatus: string(*task.DesiredStatus),
 				CreatedAt:     *task.CreatedAt,
 				Group:         *task.Group,
+				Cpu:           *task.Cpu,
+				Memory:        *task.Memory,
+				LaunchType:    string(task.LaunchType),
+				CapacityProvider: func() string {
+					if task.CapacityProviderName != nil {
+						return string(*task.CapacityProviderName)
+					}
+					return "-"
+				}(),
 			}
 
 			if task.StartedAt != nil {
@@ -65,7 +73,7 @@ func (c *ECSClient) ListTasks(ctx context.Context) ([]*types.Task, error) {
 			}
 
 			if task.ContainerInstanceArn != nil {
-				t.ContainerInstanceARN = *task.ContainerInstanceArn
+				t.ContainerInstanceArn = *task.ContainerInstanceArn
 			}
 
 			tasks = append(tasks, t)
@@ -95,23 +103,31 @@ func (c *ECSClient) DescribeTasks(ctx context.Context, taskIds []string) ([]*typ
 
 	for _, task := range result.Tasks {
 		taskDetail := &types.TaskDetail{
-			TaskID:            extractTaskId(*task.TaskArn),
-			TaskARN:           *task.TaskArn,
-			ClusterARN:        *task.ClusterArn,
-			TaskDefinitionARN: *task.TaskDefinitionArn,
+			TaskId:            extractTaskId(*task.TaskArn),
+			TaskArn:           *task.TaskArn,
+			ClusterArn:        *task.ClusterArn,
+			Cpu:               *task.Cpu,
+			Memory:            *task.Memory,
+			TaskDefinitionArn: *task.TaskDefinitionArn,
 			Status:            string(*task.LastStatus),
 			DesiredStatus:     string(*task.DesiredStatus),
 			CreatedAt:         *task.CreatedAt,
 			Group:             *task.Group,
 			LaunchType:        string(task.LaunchType),
+			CapacityProvider: func() string {
+				if task.CapacityProviderName != nil {
+					return string(*task.CapacityProviderName)
+				}
+				return "-"
+			}(),
 		}
 
 		if task.ContainerInstanceArn != nil {
-			taskDetail.ContainerInstanceARN = *task.ContainerInstanceArn
+			taskDetail.ContainerInstanceArn = *task.ContainerInstanceArn
 		}
 
 		if task.Cpu != nil {
-			taskDetail.CPU = *task.Cpu
+			taskDetail.Cpu = *task.Cpu
 		}
 
 		if task.Memory != nil {
