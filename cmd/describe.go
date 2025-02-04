@@ -202,7 +202,7 @@ Examples:
 					return fmt.Errorf("failed to list tasks: %w", err)
 				}
 				for _, task := range tasks {
-					taskIds = append(taskIds, task.TaskARN)
+					taskIds = append(taskIds, task.TaskArn)
 				}
 			}
 
@@ -231,13 +231,13 @@ Examples:
 			default:
 				// Default formatted output
 				for _, task := range tasks {
-					fmt.Printf("Task ID:          %s\n", task.TaskID)
+					fmt.Printf("Task ID:          %s\n", task.TaskId)
 					fmt.Printf("Status:           %s\n", task.Status)
 					fmt.Printf("Desired Status:   %s\n", task.DesiredStatus)
-					fmt.Printf("Task Definition:  %s\n", task.TaskDefinitionARN)
+					fmt.Printf("Task Definition:  %s\n", task.TaskDefinitionArn)
 					fmt.Printf("Launch Type:      %s\n", task.LaunchType)
-					if task.CPU != "" {
-						fmt.Printf("CPU:             %s\n", task.CPU)
+					if task.Cpu != "" {
+						fmt.Printf("CPU:             %s\n", task.Cpu)
 					}
 					if task.Memory != "" {
 						fmt.Printf("Memory:          %s\n", task.Memory)

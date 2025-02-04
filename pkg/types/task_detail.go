@@ -6,14 +6,14 @@ import (
 )
 
 type TaskDetail struct {
-	TaskID               string             `json:"taskId" yaml:"taskId"`
-	TaskARN              string             `json:"taskArn" yaml:"taskArn"`
-	ClusterARN           string             `json:"clusterArn" yaml:"clusterArn"`
-	TaskDefinitionARN    string             `json:"taskDefinitionArn" yaml:"taskDefinitionArn"`
-	ContainerInstanceARN string             `json:"containerInstanceArn,omitempty" yaml:"containerInstanceArn,omitempty"`
+	TaskId               string             `json:"taskId" yaml:"taskId"`
+	TaskArn              string             `json:"taskArn" yaml:"taskArn"`
+	ClusterArn           string             `json:"clusterArn" yaml:"clusterArn"`
+	TaskDefinitionArn    string             `json:"taskDefinitionArn" yaml:"taskDefinitionArn"`
+	ContainerInstanceArn string             `json:"containerInstanceArn,omitempty" yaml:"containerInstanceArn,omitempty"`
 	Status               string             `json:"status" yaml:"status"`
 	DesiredStatus        string             `json:"desiredStatus" yaml:"desiredStatus"`
-	CPU                  string             `json:"cpu,omitempty" yaml:"cpu,omitempty"`
+	Cpu                  string             `json:"cpu,omitempty" yaml:"cpu,omitempty"`
 	Memory               string             `json:"memory,omitempty" yaml:"memory,omitempty"`
 	CreatedAt            time.Time          `json:"createdAt" yaml:"createdAt"`
 	StartedAt            time.Time          `json:"startedAt,omitempty" yaml:"startedAt,omitempty"`
@@ -23,6 +23,7 @@ type TaskDetail struct {
 	LaunchType           string             `json:"launchType" yaml:"launchType"`
 	Containers           []ContainerDetail  `json:"containers" yaml:"containers"`
 	NetworkInterfaces    []NetworkInterface `json:"networkInterfaces,omitempty" yaml:"networkInterfaces,omitempty"`
+	CapacityProvider     string             `json:"capacityProvider,omitempty" yaml:"capacityProvider,omitempty"`
 }
 
 type ContainerDetail struct {

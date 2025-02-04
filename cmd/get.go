@@ -118,7 +118,7 @@ func getServicesCmd() *cobra.Command {
 	}
 
 	// Add flags
-	cmd.Flags().StringVarP(&outputFormat, "output", "o", "", "Output format (json|yaml)")
+	cmd.Flags().StringVarP(&outputFormat, "output", "o", "", "Output format (json|yaml|wide)")
 
 	return cmd
 }
@@ -151,6 +151,42 @@ func getTasksCmd() *cobra.Command {
 
 			// Handle different output formats
 			switch outputFormat {
+			case "wide":
+				headers := []string{
+					"TASK ID",
+					"STATUS",
+					"TASK DEFINITION",
+					"STARTED",
+					"AGE",
+					"CPU",
+					"MEMORY",
+					"LAUNCH TYPE",
+					"CAPACITY PROVIDER",
+				}
+				table := utils.NewTableFormatter(headers)
+				for _, task := range tasks {
+					age := time.Since(task.CreatedAt).Round(time.Second)
+					started := "-"
+					if !task.StartedAt.IsZero() {
+						started = formatAge(time.Since(task.StartedAt))
+					}
+
+					row := []string{
+						task.TaskId,
+						task.Status,
+						task.TaskDefFamily,
+						started,
+						formatAge(age),
+						task.Cpu,
+						task.Memory,
+						task.LaunchType,
+						"-",
+					}
+					table.AppendRow(row)
+				}
+
+				table.Render()
+				return nil
 			case "json":
 				data, err := json.MarshalIndent(tasks, "", "  ")
 				if err != nil {
@@ -187,7 +223,7 @@ func getTasksCmd() *cobra.Command {
 					}
 
 					row := []string{
-						task.TaskID,
+						task.TaskId,
 						task.Status,
 						task.TaskDefFamily,
 						started,
@@ -206,7 +242,7 @@ func getTasksCmd() *cobra.Command {
 	}
 
 	// Add flags
-	cmd.Flags().StringVarP(&outputFormat, "output", "o", "", "Output format (json|yaml)")
+	cmd.Flags().StringVarP(&outputFormat, "output", "o", "", "Output format (json|yaml|wide)")
 
 	return cmd
 }
