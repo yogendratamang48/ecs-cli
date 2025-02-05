@@ -180,7 +180,7 @@ func getTasksCmd() *cobra.Command {
 						task.Cpu,
 						task.Memory,
 						task.LaunchType,
-						"-",
+						task.CapacityProvider,
 					}
 					table.AppendRow(row)
 				}

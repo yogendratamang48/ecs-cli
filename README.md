@@ -30,7 +30,7 @@ Important: This CLI is designed to interact with existing ECS clusters and servi
 ## Installation 
 ### Using Binary
 ```bash
-VERSION=v0.0.7
+VERSION=v0.0.9
 wget -O ecs-cli.tar.gz https://github.com/yogendratamang48/ecs-cli/releases/download/$VERSION/ecs-cli_Linux_x86_64.tar.gz
 tar -xzf ecs-cli.tar.gz
 chmod +x ecs
