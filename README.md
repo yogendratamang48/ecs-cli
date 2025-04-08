@@ -1,33 +1,34 @@
 # ecs-cli
 A kubectl-style command-line interface for AWS Elastic Container Service (ECS) that simplifies cluster management and container operations.
 
-Important: This CLI is designed to interact with existing ECS clusters and services. It does NOT create or manage AWS infrastructure resources. For infrastructure provisioning, please use AWS CLI, AWS CloudFormation, or Terraform. While task deletion is supported, service deletion has many implications (load balancers, auto-scaling groups, task definitions) and is intentionally not supported. 
+Important: This CLI is designed to interact with existing ECS clusters and services. It does NOT create or manage AWS infrastructure resources. For infrastructure provisioning, please use AWS CLI, AWS CloudFormation, or Terraform. While task deletion is supported, service deletion has many implications (load balancers, auto-scaling groups, task definitions) and is intentionally not supported.
 
 ## Features
-- Context-based configuration management similar to kubectl  
-- Easy service and task management for existing ECS resources  
-- Real-time container logs viewing  
-- Service scaling capabilities  
-- AWS profile and region support  
+- Context-based configuration management similar to kubectl
+- Easy service and task management for existing ECS resources
+- Real-time container logs viewing
+- Service scaling capabilities
+- AWS profile and region support
 - Intuitive command structure
 
 ## Scope
 ### What this CLI does:
 
-- Manage and switch between multiple ECS cluster contexts  
-- List and describe existing services and tasks  
-- View and follow container logs  
-- Scale existing services  
+- Manage and switch between multiple ECS cluster contexts
+- List and describe existing services and tasks
+- View and follow container logs
+- Scale existing services
+- Execute commands in running containers
 
 ### What this CLI doesn't do:
-- Create or delete ECS clusters  
-- Create or modify AWS infrastructure  
-- Manage IAM roles or permissions  
-- Handle service definitions or task definitions  
-- Manage Auto Scaling configurations  
-- Create or modify Load Balancers  
+- Create or delete ECS clusters
+- Create or modify AWS infrastructure
+- Manage IAM roles or permissions
+- Handle service definitions or task definitions
+- Manage Auto Scaling configurations
+- Create or modify Load Balancers
 
-## Installation 
+## Installation
 ### Using Binary
 ```bash
 VERSION=v0.0.9
@@ -45,7 +46,7 @@ go build -o ecs
 mv ecs /usr/local/bin/
 ```
 ## Configuration
-The CLI uses a context-based configuration system similar to kubectl, powered by Viper. Configurations are stored in `$HOME/.ecs/config.yaml` 
+The CLI uses a context-based configuration system similar to kubectl, powered by Viper. Configurations are stored in `$HOME/.ecs/config.yaml`
 ## Context Management
 setup new context:
 ```bash
@@ -80,13 +81,21 @@ ecs logs <task-id> --follow
 
 # scale service
 ecs scale service-name --replicas=N
+
+# execute commands in containers (container name is auto-detected)
+# Note: Requires the AWS Session Manager plugin to be installed
+# https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html
+# Note: AWS ECS execute-command only supports interactive mode
+ecs exec <task-id> -- <command>
+ecs exec <task-id> -- ls -la
+ecs exec <task-id> -c <container-name> -- /bin/bash
 ```
 
 ## Development
 This CLI is built using:
-- [Cobra](https://github.com/spf13/cobra) - CLI framework  
-- [Viper](https://github.com/spf13/viper) - Configuration management  
-- [pflag](https://github.com/spf13/pflag) - Flag parsing  
+- [Cobra](https://github.com/spf13/cobra) - CLI framework
+- [Viper](https://github.com/spf13/viper) - Configuration management
+- [pflag](https://github.com/spf13/pflag) - Flag parsing
 
 ## Status
 Note: This CLI is under active development. Breaking changes may occur.
