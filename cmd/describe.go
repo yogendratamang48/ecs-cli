@@ -1,5 +1,4 @@
 // cmd/describe.go
-// cmd/describe.go
 package cmd
 
 import (

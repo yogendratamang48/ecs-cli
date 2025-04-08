@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -224,4 +225,32 @@ func (c *ECSClient) StopTask(ctx context.Context, taskId string) error {
 func extractTaskId(arn string) string {
 	parts := strings.Split(arn, "/")
 	return parts[len(parts)-1]
+}
+
+// GetContainerNameForTask returns the name of the first non-service-connect container in a task
+func (c *ECSClient) GetContainerNameForTask(ctx context.Context, taskID string) (string, error) {
+	input := &ecs.DescribeTasksInput{
+		Cluster: &c.Context.Cluster,
+		Tasks:   []string{taskID},
+	}
+
+	result, err := c.Client.DescribeTasks(ctx, input)
+	if err != nil {
+		return "", fmt.Errorf("failed to describe task: %w", err)
+	}
+
+	if len(result.Tasks) == 0 {
+		return "", fmt.Errorf("task %s not found", taskID)
+	}
+
+	task := result.Tasks[0]
+
+	// Find the first non-service-connect container
+	for _, container := range task.Containers {
+		if container.Name != nil && !strings.HasPrefix(*container.Name, "ecs-service-connect-") {
+			return *container.Name, nil
+		}
+	}
+
+	return "", fmt.Errorf("no suitable container found in task %s", taskID)
 }

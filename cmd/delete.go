@@ -1,4 +1,4 @@
-// cmd/task.go
+// cmd/delete.go
 package cmd
 
 import (

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/yogendratamang48/ecs/pkg/types"
 )
 
@@ -18,6 +19,11 @@ type ECSClient struct {
 
 type CloudWatchClient struct {
 	*cloudwatchlogs.Client
+	Context *types.Context
+}
+
+type SSMClient struct {
+	*ssm.Client
 	Context *types.Context
 }
 
@@ -50,6 +56,22 @@ func NewECSClient(ctx *types.Context) (*ECSClient, error) {
 
 	return &ECSClient{
 		Client:  ecs.NewFromConfig(cfg),
+		Context: ctx,
+	}, nil
+}
+
+func NewSSMClient(ctx *types.Context) (*SSMClient, error) {
+	// Load AWS configuration
+	cfg, err := config.LoadDefaultConfig(context.Background(),
+		config.WithRegion(ctx.Region),
+		config.WithSharedConfigProfile(ctx.Profile),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &SSMClient{
+		Client:  ssm.NewFromConfig(cfg),
 		Context: ctx,
 	}, nil
 }
