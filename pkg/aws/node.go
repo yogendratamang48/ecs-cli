@@ -15,10 +15,10 @@ func (c *ECSClient) ListNodes(ctx context.Context) ([]*types.Node, error) {
 
 	result, err := c.Client.ListContainerInstances(ctx, input)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("no container instances found in cluster")
 	}
 	if len(result.ContainerInstanceArns) == 0 {
-		return nil, fmt.Errorf("no container instances found in cluster")
+		return nil, err
 	}
 	// Describe the container instances
 	// to get detailed information about each instance
