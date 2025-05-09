@@ -14,15 +14,13 @@ func (c *ECSClient) ListNodes(ctx context.Context) ([]*types.Node, error) {
 	}
 
 	result, err := c.Client.ListContainerInstances(ctx, input)
+
 	if err != nil {
 		return nil, fmt.Errorf("no container instances found in cluster")
 	}
 	if len(result.ContainerInstanceArns) == 0 {
 		return nil, err
 	}
-	// Describe the container instances
-	// to get detailed information about each instance
-	// and convert them to our Node type
 
 	var nodes []*types.Node
 	describeInput := &ecs.DescribeContainerInstancesInput{
@@ -33,15 +31,16 @@ func (c *ECSClient) ListNodes(ctx context.Context) ([]*types.Node, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	for _, instance := range describeResult.ContainerInstances {
 		node := &types.Node{
-			InstanceID:       *instance.Ec2InstanceId,
-			CapacityProvider: *instance.CapacityProviderName,
-			Status:           *instance.Status,
-			RegisteredAt:     *instance.RegisteredAt,
-			RunningTasks:     instance.RunningTasksCount,
-			PendingTasks:     instance.PendingTasksCount,
-			StatusReason:     *instance.StatusReason,
+			InstanceID:        string(*instance.Ec2InstanceId),
+			ContainerInstance: string(*instance.ContainerInstanceArn),
+			CapacityProvider:  string(*instance.CapacityProviderName),
+			Status:            string(*instance.Status),
+			RegisteredAt:      *instance.RegisteredAt,
+			RunningTasks:      instance.RunningTasksCount,
+			PendingTasks:      instance.PendingTasksCount,
 		}
 		nodes = append(nodes, node)
 	}
