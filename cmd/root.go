@@ -55,4 +55,5 @@ func init() {
 	rootCmd.AddCommand(scaleCmd())
 	rootCmd.AddCommand(logsCmd())
 	rootCmd.AddCommand(execCmd())
+	rootCmd.AddCommand(portForwardCmd())
 }

@@ -89,6 +89,13 @@ ecs scale service-name --replicas=N
 ecs exec <task-id> -- <command>
 ecs exec <task-id> -- ls -la
 ecs exec <task-id> -c <container-name> -- /bin/bash
+
+# forward container port to local port (container name is auto-detected)
+# Note: Requires the AWS Session Manager plugin to be installed
+# The container should have socat, netcat, or bash installed for port forwarding to work
+ecs port-forward <task-id> <local-port>:<container-port>
+ecs port-forward <task-id> 8080:80  # Access container port 80 via localhost:8080
+ecs port-forward <task-id> 8080:80 -c <container-name>
 ```
 
 ## Development
