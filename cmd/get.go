@@ -21,8 +21,9 @@ func getCmd() *cobra.Command {
 		Long: `Display one or many resources from an ECS cluster.
         
 Valid resource types are:
-  * services (alias: svc)
+  * services (alias: svc, svcs)
   * tasks
+  * nodes (alias: node, servers, instances)
         
 Examples:
   # List all services in the current context
@@ -32,12 +33,16 @@ Examples:
   ecs get svc
   
   # List all tasks in the current context
-  ecs get tasks`,
+  ecs get tasks
+
+  # List nodes in the cluster
+  ecs get nodes`,
 	}
 
 	// Add subcommands to 'get'
-	cmd.AddCommand(getServicesCmd()) // This adds the services command
-	cmd.AddCommand(getTasksCmd())    // This adds the tasks command
+	cmd.AddCommand(getServicesCmd()) // get services
+	cmd.AddCommand(getTasksCmd())    // get tasks
+	cmd.AddCommand(getNodesCmd())    // get nodes
 
 	return cmd
 }
@@ -47,7 +52,7 @@ func getServicesCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "services",
-		Aliases: []string{"svc", "svc", "service", "svcs"},
+		Aliases: []string{"svc", "svcs", "service", "services"},
 		Short:   "List services",
 		Long:    `Display all services in the current ECS cluster context.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -244,6 +249,77 @@ func getTasksCmd() *cobra.Command {
 	// Add flags
 	cmd.Flags().StringVarP(&outputFormat, "output", "o", "", "Output format (json|yaml|wide)")
 
+	return cmd
+}
+
+func getNodesCmd() *cobra.Command {
+	var outputFormat string
+	cmd := &cobra.Command{
+		Use:     "nodes",
+		Aliases: []string{"node", "nodes", "servers", "instances"},
+		Short:   "List nodes",
+		Long:    `Display all nodes in the current ECS cluster context.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx, err := configManager.GetContext()
+			if err != nil {
+				return fmt.Errorf("failed to get current context: %w", err)
+			}
+			// create ecs client
+			client, err := aws.NewECSClient(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to create ECS client: %w", err)
+			}
+			// get nodes
+			nodes, err := client.ListNodes(context.Background())
+			if err != nil {
+				return fmt.Errorf("failed to list nodes: %w", err)
+			}
+			switch outputFormat {
+			case "json":
+				data, err := json.MarshalIndent(nodes, "", "  ")
+				if err != nil {
+					return fmt.Errorf("failed to marshal to JSON: %w", err)
+				}
+				fmt.Println(string(data))
+				return nil
+			case "yaml":
+				data, err := yaml.Marshal(nodes)
+				if err != nil {
+					return fmt.Errorf("failed to marshal to YAML: %w", err)
+				}
+				fmt.Println(string(data))
+				return nil
+			case "":
+				headers := []string{
+					"INSTANCE ID",
+					"CAPACITY PROVIDER",
+					"STATUS",
+					"RUNNING TASKS",
+					"PENDING TASKS",
+					"AGE",
+				}
+				table := utils.NewTableFormatter(headers)
+				for _, node := range nodes {
+					age := time.Since(node.RegisteredAt).Round(time.Second)
+					row := []string{
+						node.InstanceID,
+						node.CapacityProvider,
+						node.Status,
+						fmt.Sprintf("%d", node.RunningTasks),
+						fmt.Sprintf("%d", node.PendingTasks),
+						formatAge(age),
+					}
+					table.AppendRow(row)
+				}
+				table.Render()
+				return nil
+			default:
+				return fmt.Errorf("unsupported output format: %s", outputFormat)
+			}
+		},
+	}
+	// Add flags
+	cmd.Flags().StringVarP(&outputFormat, "output", "o", "", "Output format (json|yaml)")
 	return cmd
 }
 
