@@ -2,62 +2,54 @@ package aws
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"os"
+	"sort"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 )
 
-// ECSNode represents the information about a single ECS container instance
- type ECSNode struct { 
-	ClusterArn         string `json:"clusterArn"`
-	ContainerInstanceArn string `json:"containerInstanceArn"`
-	RunningTasksCount  int64  `json:"runningTasksCount"`
-	PendingTasksCount  int64  `json:"pendingTasksCount"`
-	EcsAgentVersion    string `json:"ecsAgentVersion"`
+// ECSClient contains the AWS ECS client
+type ECSClient struct {
+	Client *ecs.Client
 }
 
-// ListECSNodes retrieves the ECS nodes from the specified cluster
-func ListECSNodes(clusterName string) ([]ECSNode, error) {
-	sess, err := session.NewSession() 
+// ListNodes lists the container instances and sorts them by RegisteredAt
+func (c *ECSClient) ListNodes(ctx context.Context) ([]*types.Node, error) {
+	// Load the AWS config
+	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create session: %w", err)
+		return nil, err
 	}
-	svc := ecs.New(sess)
-
-	input := &ecs.ListContainerInstancesInput{
-		Cluster: aws.String(clusterName),
-	}
-
-	result, err := svc.ListContainerInstances(input)
+	
+	// Create the ECS service client
+	client := ecs.NewFromConfig(cfg)
+	
+	// List container instances
+	result, err := client.ListContainerInstances(ctx, &ecs.ListContainerInstancesInput{
+		Cluster: aws.String("your-cluster-name"), // Replace with your cluster name
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to list container instances: %w", err)
+		return nil, err
 	}
-
-	nodes := make([]ECSNode, 0)
-	for _, instanceArn := range result.ContainerInstanceArns {
-		descInput := &ecs.DescribeContainerInstancesInput{
-			Cluster:            aws.String(clusterName),
-			ContainerInstances: []*string{instanceArn},
-		}
-		descResult, err := svc.DescribeContainerInstances(descInput)
+	
+	// Describe container instances in batches
+	var nodes []*types.Node
+	for _, arn := range result.ContainerInstanceArns {
+		describeResp, err := client.DescribeContainerInstances(ctx, &ecs.DescribeContainerInstancesInput{
+			Cluster:            aws.String("your-cluster-name"),
+			ContainerInstances: []string{*arn},
+		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to describe container instance: %w", err)
+			return nil, err
 		}
-
-		for _, node := range descResult.ContainerInstances {
-			nodes = append(nodes, ECSNode{
-				ClusterArn:         clusterName,
-				ContainerInstanceArn: *node.ContainerInstanceArn,
-				RunningTasksCount:  *node.RunningTasksCount,
-				PendingTasksCount:  *node.PendingTasksCount,
-				EcsAgentVersion:    *node.Ec2InstanceId,
-			})
-		}
+		nodes = append(nodes, describeResp.ContainerInstances...)
 	}
 
+	// Sort nodes by RegisteredAt
+	sort.Slice(nodes, func(i, j int) bool {
+		return nodes[i].RegisteredAt.Before(*nodes[j].RegisteredAt)
+	})
 	return nodes, nil
 }
